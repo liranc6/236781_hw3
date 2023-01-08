@@ -23,7 +23,16 @@ def char_maps(text: str):
     #  It's best if you also sort the chars before assigning indices, so that
     #  they're in lexical order.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # Remove whitespaces, end of lines and tabs
+    text = re.sub('\s*', '', text)
+    list_of_all_chars = list(text)
+    unique_chars = list(set(list_of_all_chars))
+    # sort the characters
+    unique_chars.sort()
+    indices = range(len(unique_chars))
+    # Create the two dictionaries with indices
+    char_to_idx = dict(zip(unique_chars, indices))
+    idx_to_char = dict(zip(indices, unique_chars))
     # ========================
     return char_to_idx, idx_to_char
 
