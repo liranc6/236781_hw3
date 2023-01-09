@@ -48,7 +48,11 @@ def remove_chars(text: str, chars_to_remove):
     """
     # TODO: Implement according to the docstring.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    n_removed = 0
+    text_clean = text
+    for c in chars_to_remove:
+        n_removed += text_clean.count(c)
+        text_clean = text_clean.replace(c, "")
     # ========================
     return text_clean, n_removed
 
