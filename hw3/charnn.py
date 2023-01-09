@@ -1,4 +1,7 @@
 import re
+
+import numpy
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.utils.data
@@ -96,7 +99,6 @@ def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     # ========================
     return result
 
-
 def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device="cpu"):
     """
     Splits a char sequence into smaller sequences of labelled samples.
@@ -113,6 +115,7 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     the number of created samples, S is the seq_len and V is the embedding
     dimension.
     """
+                                #(len(text), V) -> (len(text)/seq_len, seq_len, V)
     # TODO:
     #  Implement the labelled samples creation.
     #  1. Embed the given text.
@@ -121,12 +124,44 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     #  3. Create the labels tensor in a similar way and convert to indices.
     #  Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
-    embed_text = chars_to_onehot(text, char_to_idx)
-    samples = embed_text.split(seq_len)
 
 
 
-    raise NotImplementedError()
+    # instructions are not clear. what to do with remaining chars? that is, (len(text) % seq_len > 0)
+    """    pad_last_string = False
+    if pad_last_string:
+        a = list(embed_text[:-1, :].split(seq_len, dim=0))
+        S, V = a[0].size()
+        K, _ = a[-1].size()
+        pad = torch.zeros(S-K, V)
+        a[-1] = torch.cat((a[-1], pad), dim=0)
+        samples = torch.stack(a, dim=0)
+    else: # ignore remaining letters
+    """
+
+    # samples tensor shape
+    S = seq_len
+    N = (len(text) - 1) // S
+    V = len(char_to_idx)
+
+    # Embed the given text
+    embed_text = chars_to_onehot(text[:N * S], char_to_idx)
+
+    # split to N groups of size S
+    samples = embed_text.split(S, dim=0)
+
+    # stack N tensors of shape (S, V) to one of shape (N, S, V)
+    samples = torch.stack(samples, dim=0).to(device)
+
+    # represent text as indices
+    labels = [char_to_idx[c] for c in text[1:N*S+1]]
+
+    # split to N chunks of size seq_len
+    labels = numpy.array_split(labels, N)
+
+    # list to tensor
+    labels = torch.tensor(labels, dtype=torch.int8).to(device)
+
     # ========================
     return samples, labels
 
