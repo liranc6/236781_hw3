@@ -125,8 +125,6 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     #  Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
 
-
-
     # instructions are not clear. what to do with remaining chars? that is, (len(text) % seq_len > 0)
     """    pad_last_string = False
     if pad_last_string:
@@ -145,22 +143,45 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     V = len(char_to_idx)
 
     # Embed the given text
-    embed_text = chars_to_onehot(text[:N * S], char_to_idx)
+    embed_text = chars_to_onehot(text[:N * S+1], char_to_idx)
+
+    # sample first N*S chars starting from pos 0
+    samples = embed_text[:-1, :]
 
     # split to N groups of size S
-    samples = embed_text.split(S, dim=0)
+    samples = torch.reshape(samples, shape=(N, S, V)).to(device)
+
+    # represent text as indices
+    labels = numpy.array([char_to_idx[c] for c in text[1:N*S+1]])
+
+    # numpy array to tensor
+    labels = torch.tensor(labels, dtype=torch.int8)
+
+    # split to N chunks of size S
+    labels = torch.reshape(labels, shape=(N, S)).to(device)
+
+
+    """
+    Option 2:
+    # label first N*S chars starting from pos 1
+    labels = embed_text[1:, :]
+
+    # get indices of labels
+    labels = torch.argmax(labels, dim=1)
+
+    # split to N groups of size S
+    labels = torch.reshape(labels, shape=(N, S))
+
+
+    # split to N groups of size S starting from pos 0
+    samples = embed_text[:-1, :].split(S, dim=0)
 
     # stack N tensors of shape (S, V) to one of shape (N, S, V)
     samples = torch.stack(samples, dim=0).to(device)
-
-    # represent text as indices
-    labels = [char_to_idx[c] for c in text[1:N*S+1]]
-
-    # split to N chunks of size seq_len
-    labels = numpy.array_split(labels, N)
-
-    # list to tensor
-    labels = torch.tensor(labels, dtype=torch.int8).to(device)
+    
+    # split to N groups of size S starting from pos 1
+    labels = embed_text[1:, :].split(S, dim=0)
+   """
 
     # ========================
     return samples, labels
