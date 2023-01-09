@@ -24,7 +24,7 @@ def char_maps(text: str):
     #  they're in lexical order.
     # ====== YOUR CODE: ======
     # Remove whitespaces, end of lines and tabs
-    text = re.sub('\s*', '', text)
+    # text = re.sub('\s*', '', text) #TODO: check if we need this, if so, fix function chars_to_onehot() and onehot_to_chars()
     list_of_all_chars = list(text)
     unique_chars = list(set(list_of_all_chars))
     # sort the characters
@@ -51,7 +51,7 @@ def remove_chars(text: str, chars_to_remove):
     n_removed = 0
     text_clean = text
     for c in chars_to_remove:
-        n_removed += text_clean.count(c)
+        n_removed += text.count(c)
         text_clean = text_clean.replace(c, "")
     # ========================
     return text_clean, n_removed
@@ -72,10 +72,13 @@ def chars_to_onehot(text: str, char_to_idx: dict) -> Tensor:
     """
     # TODO: Implement the embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    N = len(text)
+    D = len(char_to_idx.keys())
+    result = torch.zeros([N, D], dtype=torch.int8)
+    for idx, c in enumerate(text):
+        result[idx, char_to_idx[c]] = 1
     # ========================
     return result
-
 
 def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     """
@@ -89,7 +92,7 @@ def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     """
     # TODO: Implement the reverse-embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = ''.join([idx_to_char[one_hot.tolist().index(1)] for one_hot in embedded_text])
     # ========================
     return result
 
@@ -118,6 +121,11 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     #  3. Create the labels tensor in a similar way and convert to indices.
     #  Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
+    embed_text = chars_to_onehot(text, char_to_idx)
+    samples = embed_text.split(seq_len)
+
+
+
     raise NotImplementedError()
     # ========================
     return samples, labels
