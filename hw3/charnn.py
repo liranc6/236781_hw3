@@ -318,7 +318,20 @@ class MultilayerGRU(nn.Module):
         #      then call self.register_parameter() on them. Also make
         #      sure to initialize them. See functions in torch.nn.init.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        for i in range(n_layers):
+            if i == 0:  # If this is the first layer, the input dimension is in_dim
+                input_dim = in_dim
+            else:  # For all other layers, the input dimension is h_dim
+                input_dim = h_dim
+
+            # The output dimension is h_dim
+            output_dim = h_dim
+
+            layer = nn.Linear(input_dim, output_dim)
+            self.layer_params.append(layer)
+
+        self.layers = nn.ModuleList(self.layer_params)
         # ========================
 
     def forward(self, input: Tensor, hidden_state: Tensor = None):
