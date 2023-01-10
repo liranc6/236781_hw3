@@ -76,7 +76,7 @@ def chars_to_onehot(text: str, char_to_idx: dict) -> Tensor:
     # TODO: Implement the embedding.
     # ====== YOUR CODE: ======
     N = len(text)
-    D = len(char_to_idx.keys())
+    D = len(char_to_idx)
     result = torch.zeros([N, D], dtype=torch.int8)
     for idx, c in enumerate(text):
         result[idx, char_to_idx[c]] = 1
@@ -267,7 +267,11 @@ class SequenceBatchSampler(torch.utils.data.Sampler):
         #  you can drop it.
         idx = None  # idx should be a 1-d list of indices.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        indices = range(0, len(self.dataset) - (len(self.dataset) % self.batch_size))
+        indices = np.array_split(indices, self.batch_size)
+        idx = np.transpose(indices).flatten()
+
         # ========================
         return iter(idx)
 
