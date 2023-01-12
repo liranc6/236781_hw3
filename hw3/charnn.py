@@ -137,6 +137,16 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     else: # ignore remaining letters
     """
 
+    """
+    An easier explanation for what we get in samples and labels is the following:
+    samples is the text embedded to one-hot vectors, and then split to groups of seq_len (we get N full groups).
+    labels is the same as samples, but shifted by one char to the right (we get N full groups).
+    But in compare to samples, the embedding is not represented by one-hot vectors, but by indices.
+    Reminder: one-hot it a vector of zeros, where there is '1' in the index of the indices of the char. 
+    in labels instead of the one-hot vector we just write the indices number.
+    That is, the labels is a tensor of shape (N, S) instead of (N, S, V).
+    """
+
     # samples tensor shape
     S = seq_len
     N = (len(text) - 1) // S
@@ -159,29 +169,6 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
 
     # split to N chunks of size S
     labels = torch.reshape(labels, shape=(N, S)).to(device)
-
-
-    """
-    Option 2:
-    # label first N*S chars starting from pos 1
-    labels = embed_text[1:, :]
-
-    # get indices of labels
-    labels = torch.argmax(labels, dim=1)
-
-    # split to N groups of size S
-    labels = torch.reshape(labels, shape=(N, S))
-
-
-    # split to N groups of size S starting from pos 0
-    samples = embed_text[:-1, :].split(S, dim=0)
-
-    # stack N tensors of shape (S, V) to one of shape (N, S, V)
-    samples = torch.stack(samples, dim=0).to(device)
-    
-    # split to N groups of size S starting from pos 1
-    labels = embed_text[1:, :].split(S, dim=0)
-   """
 
     # ========================
     return samples, labels
