@@ -331,19 +331,36 @@ class MultilayerGRU(nn.Module):
         #      sure to initialize them. See functions in torch.nn.init.
         # ====== YOUR CODE: ======
 
-        for i in range(n_layers):
-            if i == 0:  # If this is the first layer, the input dimension is in_dim
-                input_dim = in_dim
-            else:  # For all other layers, the input dimension is h_dim
-                input_dim = h_dim
+        # TODO: check this
+        cur_in_dim = in_dim
+        dropout_layer = nn.Dropout(dropout)
+        for k in range(n_layers):
+            # Create layer weights
+            # Only need bias once so it is disabled for "x" matrices and enabled for h.
+            W_xz = nn.Linear(cur_in_dim, self.h_dim, bias=False)
+            W_xr = nn.Linear(cur_in_dim, self.h_dim, bias=False)
+            W_xg = nn.Linear(cur_in_dim, self.h_dim, bias=False)
 
-            # The output dimension is h_dim
-            output_dim = h_dim
+            W_hz = nn.Linear(self.h_dim, self.h_dim, bias=True)
+            W_hr = nn.Linear(self.h_dim, self.h_dim, bias=True)
+            W_hg = nn.Linear(self.h_dim, self.h_dim, bias=True)
 
-            layer = nn.Linear(input_dim, output_dim)
-            self.layer_params.append(layer)
+            # Register modules
+            self.add_module(f'layer_{k}: W_xz', W_xz)
+            self.add_module(f'layer_{k}: W_xr', W_xr)
+            self.add_module(f'layer_{k}: W_xg', W_xg)
+            self.add_module(f'layer_{k}: W_hz', W_hz)
+            self.add_module(f'layer_{k}: W_hr', W_hr)
+            self.add_module(f'layer_{k}: W_hg', W_hg)
 
-        self.layers = nn.ModuleList(self.layer_params)
+            self.add_module(f'layer_{k}: dropout', dropout_layer)
+
+            # Add params to layer params
+            self.layer_params += [W_xz, W_xr, W_xg, W_hz, W_hr, W_hg, dropout_layer]
+
+            cur_in_dim = h_dim
+        self.W_hy = nn.Linear(cur_in_dim, self.out_dim, bias=True)
+        self.add_module(f'W_hy', self.W_hy)
         # ========================
 
     def forward(self, input: Tensor, hidden_state: Tensor = None):
@@ -381,6 +398,42 @@ class MultilayerGRU(nn.Module):
         #  Tip: You can use torch.stack() to combine multiple tensors into a
         #  single tensor in a differentiable manner.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        '''
+        z = FF(x,h,bias)
+        r = FF(x,h,bias)
+        g = tanh(x, r*h, bias)
+        h = lerp(h, g, z) = z*h + (1-z)*g
+
+        run flow: bottom to top 
+        '''
+        sigmoid = nn.Sigmoid()
+        tanh = nn.Tanh()
+        out_y_list = []
+        for t in range(seq_len):
+            X = input[:, t, :]
+            for i in range(0, len(self.layer_params), 7):
+                # Get the 7 layer params for each layer
+                W_xz, W_xr, W_xg, W_hz, W_hr, W_hg, dropout_layer = tuple(self.layer_params[i:i + 7])
+
+                # Calculate current layer from i
+                k = i // 7
+
+                # Get hidden layer
+                h_in = layer_states[k]
+
+                # Calculate Gru pass
+                z = sigmoid(W_xz(X) + W_hz(h_in))
+                r = sigmoid(W_xr(X) + W_hr(h_in))
+                g = tanh(W_xg(X) + W_hg(r * h_in))
+                h_out = z * h_in + (1 - z) * g
+
+                # Save hidden state
+                layer_states[k] = h_out
+
+                # Calculate next layer input
+                X = dropout_layer(h_out)
+            out_y_list.append(self.W_hy(X))
+        layer_output = torch.stack(out_y_list, dim=1)
+        hidden_state = torch.stack(layer_states, dim=1)
         # ========================
         return layer_output, hidden_state
