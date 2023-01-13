@@ -93,7 +93,30 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            train_result = self.train_epoch(dl_train, verbose=verbose, **kw)
+            e_train_avg_loss = sum(train_result.losses) / len(train_result.losses)
+            train_loss.append(e_train_avg_loss)
+            train_acc.append(train_result.accuracy)
+
+            test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
+            e_test_avg_loss = sum(test_result.losses) / len(test_result.losses)
+            test_loss.append(e_test_avg_loss)
+            test_acc.append(test_result.accuracy)
+
+
+            if best_acc is None or test_result.accuracy > best_acc:
+                # ====== YOUR CODE: ======
+                epochs_without_improvement = 0
+                best_acc = test_result.accuracy
+                if checkpoints is not None:
+                    save_checkpoint = True
+                # ========================
+            else:
+                # ====== YOUR CODE: ======
+                epochs_without_improvement += 1
+                if not (early_stopping is None) and epochs_without_improvement >= early_stopping:
+                    break
+                # ========================
             # ========================
 
             # Save model checkpoint if requested
@@ -289,7 +312,20 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            # Compute forward pass given previous hidden state
+            layer_output, self.hidden_state = self.model(x, self.hidden_state)
+            # Compute loss:
+            # Cross entropy loss in pytorch can one hot encodings with class indices in the following way:
+            # y_pred needs to be of shape (batch, C, d1, d2, ...) in our case that would be (B, V, S)
+            # y needs to be of shape (B,S)
+            # This means that by transposing y_pred from shape (B, S, V) to shape (B, V, S)
+            # we can avoid embedding y
+            y_out = torch.transpose(layer_output, 1, 2)
+            loss = self.loss_fn(y_out, y)
+
+            # Get class labels from one hot
+            y_pred = torch.argmax(y_out, dim=1)
+            num_correct = ((y == y_pred).sum())
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
