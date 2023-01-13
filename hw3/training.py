@@ -217,18 +217,19 @@ class Trainer(abc.ABC):
 class RNNTrainer(Trainer):
     def __init__(self, model, loss_fn, optimizer, device=None):
         super().__init__(model, loss_fn, optimizer, device)
+        self.hidden_state = None
 
     def train_epoch(self, dl_train: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().train_epoch(dl_train, **kw)
 
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -246,9 +247,31 @@ class RNNTrainer(Trainer):
         #  - Update params
         #  - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        # Compute forward pass given previous hidden state
+        layer_output, self.hidden_state = self.model(x, self.hidden_state)
+        self.optimizer.zero_grad()
 
+        # Compute loss:
+        # Cross entropy loss in pytorch can one hot encodings with class indices in the following way:
+        # y_pred needs to be of shape (batch, C, d1, d2, ...) in our case that would be (B, V, S)
+        # y needs to be of shape (B,S)
+        # This means that by transposing y_pred from shape (B, S, V) to shape (B, V, S)
+        # we can avoid embedding y
+        y_out = torch.transpose(layer_output, 1, 2)
+        loss = self.loss_fn(y_out, y)
+
+        # Compute backward pass:
+        loss.backward()
+
+        # Update model params:
+        self.optimizer.step()
+        # Do not compute gradients for hidden state
+        self.hidden_state = self.hidden_state.detach()
+
+        # Get class labels from one hot
+        y_pred = torch.argmax(y_out, dim=1)
+        num_correct = ((y == y_pred).sum())
+        # ========================
         # Note: scaling num_correct by seq_len because each sample has seq_len
         # different predictions.
         return BatchResult(loss.item(), num_correct.item() / seq_len)

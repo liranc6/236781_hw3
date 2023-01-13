@@ -183,7 +183,8 @@ def hot_softmax(y, dim=0, temperature=1.0):
     """
     # TODO: Implement based on the above.
     # ====== YOUR CODE: ======
-    exponents = torch.exp(y/temperature)
+
+    exponents = torch.exp((y-torch.max(y))/temperature)
     # Divide each element by the sum of all elements
     result = exponents / torch.sum(exponents, axis=dim)
     # ========================
@@ -427,11 +428,11 @@ class MultilayerGRU(nn.Module):
                 g = tanh(W_xg(X) + W_hg(r * h_in))
                 h_out = z * h_in + (1 - z) * g
 
+                X = dropout_layer(h_out)
                 # Save hidden state
                 layer_states[k] = h_out
 
                 # Calculate next layer input
-                X = dropout_layer(h_out)
             out_y_list.append(self.W_hy(X))
         layer_output = torch.stack(out_y_list, dim=1)
         hidden_state = torch.stack(layer_states, dim=1)
