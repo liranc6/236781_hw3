@@ -26,8 +26,6 @@ def char_maps(text: str):
     #  It's best if you also sort the chars before assigning indices, so that
     #  they're in lexical order.
     # ====== YOUR CODE: ======
-    # Remove whitespaces, end of lines and tabs
-    # text = re.sub('\s*', '', text) #TODO: check if we need this, if so, fix function chars_to_onehot() and onehot_to_chars()
     list_of_all_chars = list(text)
     unique_chars = list(set(list_of_all_chars))
     # sort the characters
@@ -223,7 +221,32 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     #  necessary for this. Best to disable tracking for speed.
     #  See torch.no_grad().
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+
+    with torch.no_grad():
+        input_to_model = start_sequence
+        hidden_state = None
+
+        while len(out_text) < n_chars:
+            # Embed the given text
+            embed_input = chars_to_onehot(input_to_model, char_to_idx).to(dtype=torch.float, device=device)
+            # Add a batch dimension of 1
+            embed_input = embed_input.unsqueeze(0)
+            # Feed the start_sequence into the model
+            output, hidden_state = model(embed_input, hidden_state)
+            # Removing first batch dimension (equal to 1) and taking last char of output
+            # After the first loop, the output will always be of len 1 because we input one char
+            output = output.squeeze(0)[-1]
+            # Calculate the probabilities of all chars to be sampled
+            probabilities = hot_softmax(output, temperature=T)
+            # Sample one char index from probabilities
+            new_char_idx = torch.multinomial(probabilities, num_samples=1).item()
+            # Convert the idx of char to a char
+            new_char = idx_to_char[new_char_idx]
+            # Append the new char to the output
+            out_text += new_char
+            # Feed the new char into the model in the next loop
+            input_to_model = new_char
+
     # ========================
 
     return out_text
