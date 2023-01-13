@@ -185,7 +185,9 @@ def hot_softmax(y, dim=0, temperature=1.0):
     """
     # TODO: Implement based on the above.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    exponents = torch.exp(y/temperature)
+    # Divide each element by the sum of all elements
+    result = exponents / torch.sum(exponents, axis=dim)
     # ========================
     return result
 
