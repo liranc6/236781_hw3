@@ -23,10 +23,10 @@ def part1_rnn_hyperparams():
     # TODO: Set the hyperparameters to train the model.
     # ====== YOUR CODE: ======
     hypers = dict(
-        batch_size=512,
-        seq_len=64,
-        h_dim=1024,
-        n_layers=3,
+        batch_size=256,
+        seq_len=32,
+        h_dim=256,
+        n_layers=2,
         dropout=0.3,
         learn_rate=0.001,
         lr_sched_factor=0.45,
@@ -38,9 +38,10 @@ def part1_rnn_hyperparams():
 
 def part1_generation_params():
     start_seq = ""
-    temperature = 0.0001
+    temperature = 0.4
     # TODO: Tweak the parameters to generate a literary masterpiece.
     # ====== YOUR CODE: ======
+    start_seq = 'ACT I.'
     # ========================
     return start_seq, temperature
 
