@@ -19,7 +19,26 @@ class EncoderCNN(nn.Module):
         #  use pooling or only strides, use any activation functions,
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        # out_channels_list = [64, 128, 256]
+        # if we don't use Fully connected layer
+        # out_channels_list = [64, 128, 256, out_channels]
+        # it's the only list that passes the tests, maybe it's the right way to do it, I'm not sure
+        out_channels_list = [64, 128, out_channels]
+        for channels in out_channels_list:
+            modules.append(nn.Conv2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False))
+            modules.append(nn.MaxPool2d(kernel_size=2))
+            modules.append(nn.BatchNorm2d(channels))
+            modules.append(nn.ReLU())
+            in_channels = channels
+
+        # Was in the paper, but needs a transpose of the tensor before using it
+        # and I didn't found a way to do it inside sequential modules
+        # modules.append(nn.Flatten(0,1))
+        # modules.append(nn.Linear(2048, out_channels, bias=False))
+        # modules.append(nn.BatchNorm2d(out_channels))
+        # modules.append(nn.ReLU())
+
         # ========================
         self.cnn = nn.Sequential(*modules)
 
