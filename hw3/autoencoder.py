@@ -20,13 +20,13 @@ class EncoderCNN(nn.Module):
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
 
+        # if we can use Fully connected layer
         # out_channels_list = [64, 128, 256]
-        # if we don't use Fully connected layer
-        # out_channels_list = [64, 128, 256, out_channels]
-        # it's the only list that passes the tests, maybe it's the right way to do it, I'm not sure
-        out_channels_list = [64, 128, out_channels]
+
+        out_channels_list = [64, 128, 256, out_channels]
         for channels in out_channels_list:
-            modules.append(nn.Conv2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False))
+            modules.append(nn.Conv2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False,
+                                     padding=2))
             modules.append(nn.MaxPool2d(kernel_size=2))
             modules.append(nn.BatchNorm2d(channels))
             modules.append(nn.ReLU())
@@ -61,7 +61,16 @@ class DecoderCNN(nn.Module):
         #  output should be a batch of images, with same dimensions as the
         #  inputs to the Encoder were.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        out_channels_list = [256, 128, 32]
+        for channels in out_channels_list:
+            modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False))
+            modules.append(nn.MaxUnpool2d(kernel_size=2))
+            modules.append(nn.BatchNorm2d(channels))
+            modules.append(nn.ReLU())
+            in_channels = channels
+
+        modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, kernel_size=5, bias=False))
+
         # ========================
         self.cnn = nn.Sequential(*modules)
 
