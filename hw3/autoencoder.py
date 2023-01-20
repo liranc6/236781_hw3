@@ -63,13 +63,15 @@ class DecoderCNN(nn.Module):
         # ====== YOUR CODE: ======
         out_channels_list = [256, 128, 32]
         for channels in out_channels_list:
-            modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False))
-            modules.append(nn.MaxUnpool2d(kernel_size=2))
+            modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=channels, kernel_size=5, bias=False,
+                                              padding=2))
+            modules.append(nn.UpsamplingBilinear2d(scale_factor=2))
             modules.append(nn.BatchNorm2d(channels))
             modules.append(nn.ReLU())
             in_channels = channels
 
-        modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, kernel_size=5, bias=False))
+        modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, kernel_size=5, bias=False,
+                                          stride=2, padding=2, output_padding=1))
 
         # ========================
         self.cnn = nn.Sequential(*modules)
