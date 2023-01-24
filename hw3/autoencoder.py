@@ -102,6 +102,7 @@ class VAE(nn.Module):
         # ====== YOUR CODE: ======
         self.mu_layer = nn.Linear(n_features, z_dim, bias=True)
         self.sigma_layer = nn.Linear(n_features, z_dim, bias=True)
+        self.decoder_fc = nn.Linear(z_dim, n_features)
         # ========================
 
     def _check_features(self, in_size):
@@ -140,7 +141,9 @@ class VAE(nn.Module):
         #  1. Convert latent z to features h with a linear layer.
         #  2. Apply features decoder.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        h = self.decoder_fc(z)
+        h_unflatten = h.reshape((h.shape[0], *self.features_shape))
+        x_rec = self.features_decoder(h_unflatten)
         # ========================
 
         # Scale to [-1, 1] (same dynamic range as original images).
