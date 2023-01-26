@@ -47,24 +47,36 @@ def part1_generation_params():
 
 
 part1_q1 = r"""
-**Your answer:**
+We want to split the corpus during the training for multiples reasons:
+First, we want the model to use only the recent data intake to predict future characters, as words appearing a lot 
+before shouldn't affect our prediction that much.
+Second, splitting the corpus into sequences makes it possible to upload examples to memory of reasonable size, 
+the whole corpus would take all the available memory.
+
 """
 
 part1_q2 = r"""
-**Your answer:**
+It's possible because the memory used to generate text comes from multiple sources - 
+the previous generated text, in addition to the model's hidden state - meaning the final output isn't just limited by 
+the previous sequence max length.
+This is why it's possible for the hidden state to capture more memory than the sequence length, providing us with a 
+longer than max length generated text.
 """
 
 part1_q3 = r"""
-**Your answer:**
+We are not shuffling the sequences because their order is important. Indeed, when going through the corpus batches, 
+we see that current outputs rely on previous batches with text that composes sentences together.
 """
 
 part1_q4 = r"""
 **Your answer:**
-1. The temperature value changes the variance of the next letter distribution.
-We want to change it to be a lower value than 1 (=Softmax), to gain confidence in the model's prediction -
-in order to get a possible output to stand out and be selected.
-2. When the temp is  high, the variance of the output distribution will be very high - meaning that no output will stand out and the outputs will be in a uniform distribution.
-3. When the temp is very low, we get a very low variance - meaning that high score outputs will stand out much more clearly.
+1. The temperature value changes the variance of the next letter distribution. We want to change it to be a lower value 
+than 1 (with 1=original Softmax), in order to get a possible output to stand out and be selected.
+Otherwise, the same letters might be selected along the prediction and we would get a more deterministic model.
+2. When the temp is very high, the variance of the output distribution will be very high - meaning that no output will 
+stand out and the outputs will be in a uniform distribution.
+3. When the temp is very low, we get a very low variance - meaning that high score outputs will stand out much more 
+clearly.
 """
 # ==============
 
