@@ -60,6 +60,11 @@ part1_q3 = r"""
 
 part1_q4 = r"""
 **Your answer:**
+1. The temperature value changes the variance of the next letter distribution.
+We want to change it to be a lower value than 1 (=Softmax), to gain confidence in the model's prediction -
+in order to get a possible output to stand out and be selected.
+2. When the temp is  high, the variance of the output distribution will be very high - meaning that no output will stand out and the outputs will be in a uniform distribution.
+3. When the temp is very low, we get a very low variance - meaning that high score outputs will stand out much more clearly.
 """
 # ==============
 
@@ -79,8 +84,8 @@ def part2_vae_hyperparams():
     hypers["betas"] = (0.99, 0.999)
     hypers["batch_size"] = 8
     hypers["h_dim"] = 800
-    hypers["z_dim"] = 40
-    hypers["x_sigma2"] = 0.002
+    hypers["z_dim"] = 35
+    hypers["x_sigma2"] = 0.0015
     hypers["learn_rate"] = 0.0002
     # ========================
     return hypers
@@ -123,6 +128,10 @@ In order to do so we maximize our evidence probability.
 
 part2_q4 = r"""
 **Your answer:**
+We want to model the log of the variance instead of the variance directly,
+because we need only positive numbers after using the exponent func on the result, therefore we want the variance to be positive which is achieved by using the log function.
+Note that ReLU can achieve this too, BUT it has few issues such as replacing negative values to 0, giving us the same result for 2 different negative inputs.
+Moreover, log function will give us smaller variance than ReLU, which will lead to better training stability.
 
 """
 
