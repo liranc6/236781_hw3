@@ -29,7 +29,7 @@ class EncoderCNN(nn.Module):
                                      padding=2))
             modules.append(nn.MaxPool2d(kernel_size=2))
             modules.append(nn.BatchNorm2d(channels))
-            modules.append(nn.ReLU())
+            modules.append(nn.GELU())
             in_channels = channels
 
         # Was in the paper, but needs a transpose of the tensor before using it
@@ -67,7 +67,7 @@ class DecoderCNN(nn.Module):
                                               padding=2))
             modules.append(nn.UpsamplingBilinear2d(scale_factor=2))
             modules.append(nn.BatchNorm2d(channels))
-            modules.append(nn.ReLU())
+            modules.append(nn.GELU())
             in_channels = channels
 
         modules.append(nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, kernel_size=5, bias=False,
